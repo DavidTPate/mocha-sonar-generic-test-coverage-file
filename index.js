@@ -1,13 +1,14 @@
 'use strict';
 var fs = require('fs'),
-		util = require('util'),
-		mkdirp = require("mkdirp"),
-		path = require("path");
+	util = require('util'),
+	mkdirp = require("mkdirp"),
+	path = require("path");
 
 module.exports = function (runner) {
 
 	var stack = {};
-	var title,fd;
+	var title = [];
+	var fd;
 	var root = process.cwd();
 	var filePath = process.env.GUNIT_FILE  || root + "/gunit.xml"
 	var stackF;
@@ -15,7 +16,7 @@ module.exports = function (runner) {
 		fs.unlinkSync(filePath);
 	}
 	mkdirp.sync(path.dirname(filePath));
-  	fd = fs.openSync(filePath, 'w');
+	fd = fs.openSync(filePath, 'w');
 	runner.on('test end', function(test){
 		var file = getFilePath(test);
 		// console.log('file-->', file);
@@ -24,10 +25,11 @@ module.exports = function (runner) {
 		if(!stackF){
 			stackF = stack[file] = [];
 		}
+		var joinedTitle = title.join(' ').trim();
 		var mtest = {
 			title: test.title,
-			titleId: title + ': ' + test.title,
-			suite: title,
+			titleId: joinedTitle + ': ' + test.title,
+			suite: joinedTitle,
 			stack: test.stack,
 			message: test.message,
 			file: file,
@@ -38,7 +40,11 @@ module.exports = function (runner) {
 	});
 
 	runner.on('suite', function(test){
-		title = test.title;
+		title.push(test.title)
+	});
+
+	runner.on('suite end', function() {
+		title.pop();
 	});
 
 	runner.on('fail', function(test, err){
@@ -93,10 +99,10 @@ module.exports = function (runner) {
 function espape(str){
 	str = str || '';
 	return str.replace(/&/g, '&amp;')
-				.replace(/</g, '&lt;')
-				.replace(/>/g, '&gt;')
-				.replace(/"/g, '&quot;')
-				.replace(/'/g, '&apos;');
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;');
 }
 function getFilePath(testObj){
 	if(testObj.file){
