@@ -91,10 +91,8 @@ module.exports = function (runner) {
 		fs.closeSync(fd);
 	});
 	function append(str) {
-		process.stdout.write(str);
-		process.stdout.write('\n');
 		fs.writeSync(fd, str + "\n", null, 'utf8');
-	};
+	}
 };
 function espape(str){
 	str = str || '';
